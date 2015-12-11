@@ -1,0 +1,3 @@
+[submodule "Assets/Pseudo"]
+	path = Assets/Pseudo
+	url = ../PseudoFramework.git
