@@ -18,7 +18,7 @@ public class BuildingPreview : PComponent
 
 	void Awake()
 	{
-		CachedTransform.localScale = Building.Transform.localScale * LevelManager.Instance.CurrentLevel.Modifier;
+		CachedTransform.localScale = Building.GetComponent<GrowerBase>().Size * LevelManager.Instance.CurrentLevel.Modifier;
 	}
 
 	void Update()
@@ -30,7 +30,7 @@ public class BuildingPreview : PComponent
 	void UpdatePosition()
 	{
 		Entity.Transform.localPosition = Camera.main.GetMouseWorldPosition().Round();
-		Point2 size = Building.Transform.localScale * LevelManager.Instance.CurrentLevel.Modifier;
+		Point2 size = Building.GetComponent<GrowerBase>().Size * LevelManager.Instance.CurrentLevel.Modifier;
 		isValid = BuildingManager.Instance.IsValidPosition(CachedTransform.localPosition, size, 0);
 	}
 

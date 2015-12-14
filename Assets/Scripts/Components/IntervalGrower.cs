@@ -8,7 +8,6 @@ using Pseudo;
 public class IntervalGrower : GrowerBase
 {
 	public float Interval = 3f;
-	[Tooltip("X value must be even.")]
 	public Point2 Amount = Point2.One;
 
 	float counter;
@@ -23,6 +22,11 @@ public class IntervalGrower : GrowerBase
 	public override bool ShouldGrow()
 	{
 		return counter > Interval;
+	}
+
+	public override bool ShouldMove()
+	{
+		return true;
 	}
 
 	public override Point2 GetGrowth()

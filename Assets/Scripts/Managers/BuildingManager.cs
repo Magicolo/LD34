@@ -11,9 +11,10 @@ public class BuildingManager : Singleton<BuildingManager>
 
 	Level CurrentLevel { get { return LevelManager.Instance.CurrentLevel; } }
 	int CurrentModifier { get { return CurrentLevel.Modifier; } }
+
+	readonly IEntityGroup buildingGroup = EntityManager.GetEntityGroup(EntityGroups.Building).Filter(typeof(GrowerBase));
+	readonly List<IEntity> toUpdate = new List<IEntity>();
 	readonly Dictionary<int, IEntity> idBuildings = new Dictionary<int, IEntity>();
-	readonly List<IEntity> buildings = new List<IEntity>();
-	readonly List<int> failures = new List<int>();
 
 	void Update()
 	{
@@ -28,23 +29,25 @@ public class BuildingManager : Singleton<BuildingManager>
 
 	void UpdateBuildings()
 	{
-		for (int i = 0; i < buildings.Count; i++)
+		for (int i = 0; i < toUpdate.Count; i++)
 		{
-			var entity = buildings[i];
-			var building = entity.GetComponent<GrowerBase>();
+			var building = toUpdate[i];
+			var grower = building.GetComponent<GrowerBase>();
 
-			if (failures[i] < 5 && building.ShouldGrow())
+			// Growth
+			if (grower.ShouldGrow())
 			{
-				if (Grow(building))
-					entity.SendMessage(EntityMessages.OnGrow);
+				if (Grow(grower))
+					building.SendMessage(EntityMessages.OnGrow);
 				else
-					failures[i]++;
+					toUpdate.RemoveAt(i--);
 			}
 
-			if (Move(building))
+			// Motion
+			if (grower.ShouldMove())
 			{
-				entity.SendMessage(EntityMessages.OnMove);
-				failures[i] = 0;
+				if (Move(grower))
+					building.SendMessage(EntityMessages.OnMove);
 			}
 		}
 	}
@@ -54,16 +57,17 @@ public class BuildingManager : Singleton<BuildingManager>
 		var entity = Instantiate(building);
 		var grower = entity.GetComponent<GrowerBase>();
 
-		buildings.Add(entity);
-		failures.Add(0);
 		idBuildings[grower.Id] = entity;
 		entity.Transform.parent = CachedTransform;
 		entity.Transform.localPosition = position;
 		grower.CurrentPosition = position;
-		grower.CurrentSize = entity.Transform.localScale * CurrentModifier;
+		grower.CurrentSize = grower.Size * CurrentModifier;
 
-		if (!Move(grower))
+		if (!grower.ShouldMove() || !Move(grower))
 			SetIds(grower);
+
+		if (grower.ShouldManage())
+			toUpdate.Add(entity);
 
 		return entity;
 	}
@@ -83,23 +87,20 @@ public class BuildingManager : Singleton<BuildingManager>
 
 	public void DestroyBuilding(IEntity building)
 	{
-		int index = buildings.IndexOf(building);
+		var grower = building.GetComponent<GrowerBase>();
+		SetIds(grower.CurrentPosition, grower.CurrentSize, 0);
+		building.GameObject.Destroy();
+	}
 
-		if (index != -1)
-		{
-			buildings.RemoveAt(index);
-			failures.RemoveAt(index);
-			var grower = building.GetComponent<GrowerBase>();
-			SetIds(grower.CurrentPosition, grower.CurrentSize, 0);
-			building.GameObject.Destroy();
-		}
+	public void DestroyAllBuildings()
+	{
+		for (int i = 0; i < buildingGroup.Entities.Count; i++)
+			DestroyBuilding(buildingGroup.Entities[i]);
 	}
 
 	public bool CanCreateBuilding(PEntity building, Point2 position)
 	{
-		Point2 size = building.CachedTransform.localScale;
-
-		return CanGrow(position, size, 0);
+		return CanGrow(position, building.GetComponent<GrowerBase>().Size, 0);
 	}
 
 	public bool Grow(GrowerBase grower)
@@ -272,10 +273,14 @@ public class BuildingManager : Singleton<BuildingManager>
 
 	void OnLevelChanged(Level level)
 	{
-		for (int i = 0; i < buildings.Count; i++)
+		for (int i = 0; i < buildingGroup.Entities.Count; i++)
 		{
-			var building = buildings[i];
+			var building = buildingGroup.Entities[i];
 			var grower = building.GetComponent<GrowerBase>();
+
+			if (!toUpdate.Contains(building))
+				toUpdate.Add(building);
+
 			SetIds(grower);
 		}
 	}

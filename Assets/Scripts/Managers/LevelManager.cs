@@ -11,15 +11,17 @@ public class LevelManager : Singleton<LevelManager>
 
 	public Level CurrentLevel { get; private set; }
 
-	int currentLevelIndex = -1;
-	IEntityGroup managerGroup = EntityManager.GetEntityGroup(EntityGroups.Manager);
-
 	protected override void Awake()
 	{
 		base.Awake();
 
 		for (int i = 0; i < Levels.Length; i++)
-			Levels[i].CachedGameObject.SetActive(false);
+		{
+			var level = Levels[i];
+
+			level.Index = i;
+			level.CachedGameObject.SetActive(false);
+		}
 	}
 
 	protected override void Start()
@@ -31,11 +33,15 @@ public class LevelManager : Singleton<LevelManager>
 
 	public void NextLevel()
 	{
-		if (Levels.Length > currentLevelIndex + 1)
-		{
-			currentLevelIndex++;
-			SwitchLevel(Levels[currentLevelIndex]);
-		}
+		if (CurrentLevel == null && Levels.Length > 0)
+			SwitchLevel(0);
+		else if (Levels.Length > CurrentLevel.Index + 1)
+			SwitchLevel(Levels[CurrentLevel.Index + 1]);
+	}
+
+	protected void SwitchLevel(int levelIndex)
+	{
+		SwitchLevel(Levels[levelIndex]);
 	}
 
 	protected void SwitchLevel(Level level)
@@ -45,6 +51,6 @@ public class LevelManager : Singleton<LevelManager>
 
 		CurrentLevel = level;
 		CurrentLevel.CachedGameObject.SetActive(true);
-		managerGroup.BroadcastMessage(EntityMessages.OnLevelChanged, CurrentLevel);
+		EntityManager.BroadcastMessage(EntityMessages.OnLevelChanged, CurrentLevel);
 	}
 }

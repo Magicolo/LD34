@@ -12,6 +12,7 @@ public class BuildingElementUI : Selectable
 	[EntityRequires(typeof(BuildingPreview))]
 	public PEntity Preview;
 	public Text Text;
+	public int LevelUnlocked;
 
 	PEntity currentPreview;
 
@@ -28,8 +29,8 @@ public class BuildingElementUI : Selectable
 
 	void UpdateText()
 	{
-		var scale = Preview.GetComponent<BuildingPreview>().Building.CachedTransform.localScale * LevelManager.Instance.CurrentLevel.Modifier;
-		Text.text = string.Format("{0}x{1}", scale.x, scale.y);
+		var scale = Preview.GetComponent<BuildingPreview>().Building.GetComponent<GrowerBase>().Size * LevelManager.Instance.CurrentLevel.Modifier;
+		Text.text = string.Format("{0}x{1}", scale.X, scale.Y);
 	}
 
 	void UpdateSelection()
@@ -68,5 +69,10 @@ public class BuildingElementUI : Selectable
 		base.OnPointerUp(eventData);
 
 		SetSelected(false);
+	}
+
+	void OnLevelChanged(Level level)
+	{
+		gameObject.SetActive(level.Index + 1 >= LevelUnlocked);
 	}
 }

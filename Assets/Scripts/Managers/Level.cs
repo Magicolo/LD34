@@ -12,6 +12,8 @@ public class Level : PComponent
 	public int Modifier = 1;
 	public bool Draw;
 
+	public int Index { get; set; }
+
 	int[,] map;
 	int highest;
 	int height;

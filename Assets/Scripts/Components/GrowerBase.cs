@@ -11,6 +11,7 @@ public abstract class GrowerBase : PComponent
 
 	public float MoveSpeed = 5f;
 	public float GrowSpeed = 5f;
+	public Point2 Size = Point2.One;
 	public TimeComponent Time;
 
 	public int Id
@@ -41,6 +42,11 @@ public abstract class GrowerBase : PComponent
 		BuildingManager.Instance.DestroyBuilding(Entity);
 	}
 
+	protected virtual void Awake()
+	{
+		CachedTransform.localScale = Vector3.forward;
+	}
+
 	protected virtual void Update()
 	{
 		UpdatePosition();
@@ -58,6 +64,13 @@ public abstract class GrowerBase : PComponent
 	}
 
 	public abstract bool ShouldGrow();
+
+	public abstract bool ShouldMove();
+
+	public virtual bool ShouldManage()
+	{
+		return true;
+	}
 
 	public abstract Point2 GetGrowth();
 }

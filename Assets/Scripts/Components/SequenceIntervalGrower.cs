@@ -10,8 +10,8 @@ public class SequenceIntervalGrower : GrowerBase
 	public float Interval = 2f;
 	public Point2[] Sequence;
 
-	float counter;
-	int sequenceIndex;
+	protected float counter;
+	protected int sequenceIndex;
 
 	protected override void Update()
 	{
@@ -25,12 +25,17 @@ public class SequenceIntervalGrower : GrowerBase
 		return counter > Interval;
 	}
 
+	public override bool ShouldMove()
+	{
+		return true;
+	}
+
 	public override Point2 GetGrowth()
 	{
 		return Sequence[sequenceIndex];
 	}
 
-	void OnGrow()
+	protected virtual void OnGrow()
 	{
 		counter = 0;
 		sequenceIndex = (sequenceIndex + 1) % Sequence.Length;
